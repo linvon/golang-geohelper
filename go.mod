@@ -1,4 +1,4 @@
-module geohelper
+module github.com/linvon/golang-geohelper
 
 go 1.13
 
