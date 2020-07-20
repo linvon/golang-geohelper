@@ -22,7 +22,7 @@ type GeoMap struct {
 	File string
 }
 
-func getPolyMap(file, key string, bm bool) (map[string][]*geo.Polygon, error) {
+func getPolyMap(file string, keys []string, bm bool, ff func(ks []string) string) (map[string][]*geo.Polygon, error) {
 	t := time.Now()
 	provinces, err := ioutil.ReadFile(file)
 	if err != nil {
@@ -35,36 +35,33 @@ func getPolyMap(file, key string, bm bool) (map[string][]*geo.Polygon, error) {
 
 	polysMap := make(map[string][]*geo.Polygon, 0)
 	for _, v := range fc1.Features {
-		geometry := v.Geometry
-		if geometry.Type == "MultiPolygon" {
-			mps := geometry.MultiPolygon
-			for _, polygon := range mps {
-				tmpPointList := make([]*geo.Point, 0)
-				for _, points := range polygon {
-					for _, point := range points {
-						tmpPoint := geo.NewPoint(point[1], point[0])
-						tmpPointList = append(tmpPointList, tmpPoint)
-					}
-				}
-				if _, ok := v.Properties[key]; !ok {
-					return nil, errors.New(fmt.Sprintf("file:%v has no key:%v in some features", file, key))
-				}
-				polysMap[v.Properties[key].(string)] = append(polysMap[v.Properties[key].(string)], geo.NewPolygon(tmpPointList))
+		pKeys := make([]string, len(keys))
+		for i, key := range keys {
+			if _, ok := v.Properties[key]; !ok {
+				return nil, errors.New(fmt.Sprintf("file:%v has no key:%v in some features", file, key))
 			}
-
+			pKeys[i] = v.Properties[key].(string)
+		}
+		key := ff(pKeys)
+		
+		geometry := v.Geometry
+		mps := make([][][][]float64, 0)
+		if geometry.Type == "MultiPolygon" {
+			mps = geometry.MultiPolygon
+			
 		} else if geometry.Type == "Polygon" {
-			ps := geometry.Polygon
+			mps = append(mps, geometry.Polygon)
+		}
+
+		for _, polygon := range mps {
 			tmpPointList := make([]*geo.Point, 0)
-			for _, points := range ps {
+			for _, points := range polygon {
 				for _, point := range points {
 					tmpPoint := geo.NewPoint(point[1], point[0])
 					tmpPointList = append(tmpPointList, tmpPoint)
 				}
 			}
-			if _, ok := v.Properties[key]; !ok {
-				return nil, errors.New(fmt.Sprintf("file:%v has no key:%v in some features", file, key))
-			}
-			polysMap[v.Properties[key].(string)] = append(polysMap[v.Properties[key].(string)], geo.NewPolygon(tmpPointList))
+			polysMap[key] = append(polysMap[key], geo.NewPolygon(tmpPointList))
 		}
 	}
 	if bm {
@@ -74,7 +71,15 @@ func getPolyMap(file, key string, bm bool) (map[string][]*geo.Polygon, error) {
 }
 
 func NewGeoMap(file, key string) (*GeoMap, error) {
-	g, e := getPolyMap(file, key, false)
+	g, e := getPolyMap(file, []string{key}, false, func(ks []string) string {return ks[0]})
+	if e != nil {
+		return nil, e
+	}
+	return &GeoMap{g, file}, nil
+}
+
+func NewGeoMapFormat(file string, keys []string, ff func(ks []string) string) (*GeoMap, error) {
+	g, e := getPolyMap(file, keys, false, ff)
 	if e != nil {
 		return nil, e
 	}
@@ -82,7 +87,7 @@ func NewGeoMap(file, key string) (*GeoMap, error) {
 }
 
 func NewGeoMapWithBenchmark(file, key string) (*GeoMap, error) {
-	g, e := getPolyMap(file, key, true)
+	g, e := getPolyMap(file, []string{key}, true, func(ks []string) string {return ks[0]})
 	if e != nil {
 		return nil, e
 	}
@@ -100,7 +105,31 @@ func NewGeoMapList(files, keys []string) ([]*GeoMap, []error) {
 		wg.Add(1)
 		go func(index int, wg *sync.WaitGroup) {
 			defer wg.Done()
-			g, e := getPolyMap(files[index], keys[index], false)
+			g, e := getPolyMap(files[index], []string{keys[index]}, false, func(ks []string) string {return ks[0]})
+			if e != nil {
+				l[index] = nil
+			} else {
+				l[index] = &GeoMap{g, files[index]}
+			}
+			le[index] = e
+		}(i, wg)
+	}
+	wg.Wait()
+	return l, le
+}
+
+func NewGeoMapListFormat(files []string, keys [][]string, ff func(ks []string) string) ([]*GeoMap, []error) {
+	if len(files) != len(keys) {
+		return nil, []error{errors.New("params are not matched")}
+	}
+	l := make([]*GeoMap, len(files))
+	le := make([]error, len(files))
+	wg := new(sync.WaitGroup)
+	for i := 0; i < len(files); i++ {
+		wg.Add(1)
+		go func(index int, wg *sync.WaitGroup) {
+			defer wg.Done()
+			g, e := getPolyMap(files[index], keys[index], false, ff)
 			if e != nil {
 				l[index] = nil
 			} else {
@@ -124,7 +153,7 @@ func NewGeoMapListWithBenchmark(files, keys []string) ([]*GeoMap, []error) {
 		wg.Add(1)
 		go func(index int, wg *sync.WaitGroup) {
 			defer wg.Done()
-			g, e := getPolyMap(files[index], keys[index], true)
+			g, e := getPolyMap(files[index], []string{keys[index]}, true, func(ks []string) string {return ks[0]})
 			if e != nil {
 				l[index] = nil
 			} else {
