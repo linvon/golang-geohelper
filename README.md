@@ -9,9 +9,8 @@ Find location info by latitude and longitude
 Compare the query efficiency of different geojson files
 
 ## What you need
-[GeoJson](https://geojson.org/) Map 
+[GeoJson](https://geojson.org/) Map [(Wiki)](https://en.wikipedia.org/wiki/GeoJSON)
 
-[Wiki](https://en.wikipedia.org/wiki/GeoJSON)
 
 #### How to get GeoJson File?
 
@@ -91,9 +90,8 @@ File lowgeo.json                    Result: Dki Jakarta      Elapse: 17.803µs
 
 ## 需要什么
 
-[GeoJson](https://geojson.org/) Map 
+[GeoJson](https://geojson.org/) Map  [(Wiki)](https://en.wikipedia.org/wiki/GeoJSON)
 
-[Wiki](https://en.wikipedia.org/wiki/GeoJSON)
 
 #### 如何获取 GeoJson 文件?
 
