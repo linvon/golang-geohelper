@@ -5,11 +5,25 @@
 package geohelper
 
 import (
+	_ "embed"
 	"testing"
 )
 
+//go:embed testdata/China.json
+var jsonChina []byte
+
+//go:embed testdata/Peking.json
+var jsonPeking []byte
+
 func TestNewGeoMap(t *testing.T) {
 	_, err := NewGeoMap("testdata/China.json", "name")
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestNewGeoMaoFromBytes(t *testing.T) {
+	_, err := NewGeoMapFromBytes(jsonChina, "name")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -19,19 +33,21 @@ func TestNewGeoMapFormat(t *testing.T) {
 	ff := func(ks []string) string {
 		return ks[0] + "-" + ks[1]
 	}
-	
+
 	_, err := NewGeoMapFormat("testdata/Peking.json", []string{"name", "level"}, ff)
 	if err != nil {
 		t.Fatal(err)
 	}
 }
 
-func TestNewGeoMapList(t *testing.T) {
-	_, errs := NewGeoMapList([]string{"testdata/China.json", "testdata/Peking.json"}, []string{"name", "name"})
-	for _, err := range errs {
-		if err != nil {
-			t.Fatal(err)
-		}
+func TestNewGeoMapFormatFromBytes(t *testing.T) {
+	ff := func(ks []string) string {
+		return ks[0] + "-" + ks[1]
+	}
+
+	_, err := NewGeoMapFormatFromBytes(jsonPeking, []string{"name", "level"}, ff)
+	if err != nil {
+		t.Fatal(err)
 	}
 }
 
