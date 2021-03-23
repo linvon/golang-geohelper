@@ -52,28 +52,6 @@ if err != nil {
 
 provinceName := m.FindLoc(-6.196893, 106.830407)
 fmt.Println(provinceName)
-
-files := []string{"highgeo.json", "lowgeo.json"}
-keys := []string{"ADM1_EN", "name"}
-li, errs := geohelper.NewGeoMapListWithBenchmark(files, keys)
-for _, e := range errs {
-  if e != nil {
-    log.Fatal(e)
-  }
-}
-/*
-File lowgeo.json                    loaded, Got 34 area, Elapse 5.898397ms
-File highgeo.json                   loaded, Got 34 area, Elapse 308.777274ms
-*/
-
-
-for _, g := range li {
-  g.FindLocBenchmark(-6.196893, 106.830407)
-}
-/*
-File highgeo.json                   Result: Dki Jakarta      Elapse: 567.936µs
-File lowgeo.json                    Result: Dki Jakarta      Elapse: 17.803µs
-*/
 ```
 
 
@@ -133,28 +111,6 @@ if err != nil {
 
 provinceName := m.FindLoc(-6.196893, 106.830407)
 fmt.Println(provinceName)
-
-files := []string{"highgeo.json", "lowgeo.json"}
-keys := []string{"ADM1_EN", "name"}
-li, errs := geohelper.NewGeoMapListWithBenchmark(files, keys)
-for _, e := range errs {
-  if e != nil {
-    log.Fatal(e)
-  }
-}
-/*
-File lowgeo.json                    loaded, Got 34 area, Elapse 5.898397ms
-File highgeo.json                   loaded, Got 34 area, Elapse 308.777274ms
-*/
-
-
-for _, g := range li {
-  g.FindLocBenchmark(-6.196893, 106.830407)
-}
-/*
-File highgeo.json                   Result: Dki Jakarta      Elapse: 567.936µs
-File lowgeo.json                    Result: Dki Jakarta      Elapse: 17.803µs
-*/
 ```
 
 
